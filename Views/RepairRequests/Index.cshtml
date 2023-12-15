@@ -1,0 +1,90 @@
+﻿@model IEnumerable<Tracker.Models.RepairRequest>
+
+@{
+    ViewData["Title"] = "Repair Requests";
+}
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        var ctx = document.getElementById('requestsChart').getContext('2d');
+        var dates = @Html.Raw(Json.Serialize(ViewBag.Dates));
+        var countsByType = @Html.Raw(Json.Serialize(ViewBag.CountsByType));
+
+        var datasets = Object.keys(countsByType).map(function (type) {
+            return {
+                label: type,
+                data: countsByType[type],
+                fill: false,
+                borderColor: getRandomColor(),
+                tension: 0.1
+            };
+        });
+
+        var requestsChart = new Chart(ctx, {
+            type: 'line', // Change this to the type of chart you want
+            data: {
+                labels: dates,
+                datasets: datasets
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        function getRandomColor() {
+            // You can define a color palette instead of random colors
+            var letters = '0123456789ABCDEF';
+            var color = '#';
+            for (var i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+    </script>
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+
+<form asp-action="Index" method="get">
+    <div class="form-group">
+        <label for="searchType">Type of Repair:</label>
+        <select id="searchType" name="searchType" onchange="this.form.submit()">
+            <option value="1">All</option>
+            <option value="">Clear</option>
+            @foreach (var type in Enum.GetNames(typeof(Tracker.Models.RepairType)))
+            {
+                <option value="@type">@type</option>
+            }
+        </select>
+    </div>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Type of Repair</th>
+            <th>Date of Request</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var request in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => request.Title)</td>
+                <td>@Html.DisplayFor(modelItem => request.Type)</td>
+                <td>@Html.DisplayFor(modelItem => request.RequestDate)</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<canvas id="requestsChart" width="400" height="400"></canvas>
